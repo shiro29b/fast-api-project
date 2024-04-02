@@ -12,6 +12,11 @@ router =  APIRouter(
 
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=schemas.UserOut)
 async def create_user(user : schemas.UserCreate,db: Session = Depends(get_db)):
+    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if existing_user:
+        # If user already exists, raise an HTTPException with status code 400 (Bad Request)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    
     user.password= utils.hash(user.password)
     new_user = models.User(**user.model_dump())
     db.add(new_user)
